@@ -1,0 +1,91 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# VisionAssist Backend — Docker Compose stack
+#
+# Two services:
+#   langflow  — self-hosted Langflow (LLM orchestration)
+#   api       — FastAPI proxy (the only service the Flutter app calls)
+#
+# Quick start:
+#   1. Copy .env.example to .env and fill in your credentials.
+#   2. docker compose up --build
+#   3. The API is available at http://localhost:8000
+#
+# To edit flows in the Langflow UI:
+#   Uncomment the `ports` line under the `langflow` service, restart
+#   (docker compose up langflow), open http://localhost:7860, edit your
+#   flow, export the JSON to flows/, then re-comment the ports line.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Langflow — internal only; NOT exposed to the host by default.
+  # The FastAPI service reaches it via the internal "backend" network.
+  # ─────────────────────────────────────────────────────────────────────────
+  langflow:
+    image: langflowai/langflow:latest
+    restart: unless-stopped
+    environment:
+      # Langflow stores its SQLite DB in /app/langflow; persist with a volume.
+      LANGFLOW_DATABASE_URL: sqlite:////app/langflow/langflow.db
+      # Auto-load flows from the mounted directory on startup.
+      LANGFLOW_LOAD_FLOWS_PATH: /app/flows
+    volumes:
+      - langflow_data:/app/langflow
+      # Mount the version-controlled flow JSONs so they auto-import on startup.
+      - ./flows:/app/flows:ro
+    networks:
+      - backend
+    # ── Uncomment the lines below to temporarily expose the Langflow UI
+    #    on the host for local flow editing (see flows/README.md).
+    #    Re-comment before committing / deploying.
+    # ports:
+    #   - "7860:7860"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # FastAPI proxy — the only service the Flutter app (and CI) talks to.
+  # ─────────────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override the default Langflow URL to use the internal service name.
+      LANGFLOW_BASE_URL: http://langflow:7860
+    ports:
+      - "${API_HOST_PORT:-8000}:8000"
+    depends_on:
+      langflow:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/health')",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  langflow_data:
+
+networks:
+  backend:
+    driver: bridge

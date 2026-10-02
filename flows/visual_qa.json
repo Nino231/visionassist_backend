@@ -1,0 +1,134 @@
+{
+  "id": "visual-qa-flow",
+  "name": "VisionAssist — Visual Q&A",
+  "description": "Answers a user question grounded in OCR text from an image. Returns NOT_FOUND when the answer cannot be derived from the provided context.",
+  "data": {
+    "nodes": [
+      {
+        "id": "prompt_node",
+        "type": "PromptTemplate",
+        "data": {
+          "node": {
+            "template": {
+              "template": {
+                "value": "You are an AI assistant helping a visually impaired user read product labels.\n\nContext (text read from the image):\n{ocr_text}\n\nQuestion:\n{question}\n\nRules:\n1. Answer ONLY using information explicitly stated in the Context above.\n2. Do NOT infer, guess, or add any information not present in the Context.\n3. For medicine dosage, timing, or frequency questions: if the exact answer is not present word-for-word in the Context, you MUST reply with exactly: NOT_FOUND\n4. If the answer to any question is not explicitly present in the Context, reply with exactly: NOT_FOUND\n5. Keep the answer concise — one sentence if possible.\n6. Reply in the same language as the question (Indonesian or English).\n\nAnswer:",
+                "type": "str",
+                "display_name": "Prompt Template"
+              },
+              "ocr_text": {
+                "value": "",
+                "type": "str",
+                "display_name": "OCR Text (from image)",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              },
+              "question": {
+                "value": "",
+                "type": "str",
+                "display_name": "User Question",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              }
+            },
+            "description": "Prompt template that constrains the LLM to answer only from the provided OCR context",
+            "display_name": "Visual QA Prompt"
+          }
+        },
+        "position": { "x": 100, "y": 200 }
+      },
+      {
+        "id": "llm_node",
+        "type": "ChatModel",
+        "data": {
+          "node": {
+            "template": {
+              "provider": {
+                "value": "watsonx",
+                "type": "str",
+                "display_name": "Model Provider",
+                "info": "Injected via MODEL_PROVIDER tweak. Values: watsonx | openai | ollama"
+              },
+              "model_name": {
+                "value": "",
+                "type": "str",
+                "display_name": "Model Name/ID",
+                "info": "Injected via WATSONX_MODEL_ID / OPENAI_MODEL_ID / OLLAMA_MODEL_ID tweak"
+              },
+              "api_key": {
+                "value": "",
+                "type": "str",
+                "display_name": "API Key",
+                "password": true,
+                "info": "Injected via WATSONX_API_KEY / OPENAI_API_KEY tweak"
+              },
+              "base_url": {
+                "value": "",
+                "type": "str",
+                "display_name": "Base URL",
+                "info": "Injected via WATSONX_BASE_URL / OLLAMA_BASE_URL tweak"
+              },
+              "project_id": {
+                "value": "",
+                "type": "str",
+                "display_name": "Project ID (watsonx only)",
+                "info": "Injected via WATSONX_PROJECT_ID tweak"
+              },
+              "temperature": {
+                "value": 0.0,
+                "type": "float",
+                "display_name": "Temperature",
+                "info": "Set to 0 for deterministic, grounded responses"
+              }
+            },
+            "description": "Configurable LLM node — provider and credentials injected via tweaks",
+            "display_name": "Configurable LLM"
+          }
+        },
+        "position": { "x": 500, "y": 200 }
+      },
+      {
+        "id": "output_parser",
+        "type": "ChatOutput",
+        "data": {
+          "node": {
+            "template": {},
+            "description": "Passes the LLM text output to the Langflow run response",
+            "display_name": "Output Parser"
+          }
+        },
+        "position": { "x": 900, "y": 200 }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_prompt_to_llm",
+        "source": "prompt_node",
+        "target": "llm_node",
+        "sourceHandle": "text",
+        "targetHandle": "input"
+      },
+      {
+        "id": "edge_llm_to_output",
+        "source": "llm_node",
+        "target": "output_parser",
+        "sourceHandle": "text",
+        "targetHandle": "input"
+      }
+    ]
+  },
+  "_metadata": {
+    "prompt_contract": "Answer only from ocr_text; return NOT_FOUND when the answer is not explicitly present",
+    "safety_note": "The FastAPI grounding guard provides a second deterministic layer. The NOT_FOUND sentinel triggers the safe fallback phrase in the proxy.",
+    "tweaks_injected_at_runtime": [
+      "ocr_text",
+      "question",
+      "MODEL_PROVIDER",
+      "WATSONX_API_KEY",
+      "WATSONX_PROJECT_ID",
+      "WATSONX_BASE_URL",
+      "WATSONX_MODEL_ID",
+      "OPENAI_API_KEY",
+      "OPENAI_MODEL_ID",
+      "OLLAMA_BASE_URL",
+      "OLLAMA_MODEL_ID"
+    ]
+  }
+}

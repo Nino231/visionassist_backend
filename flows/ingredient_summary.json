@@ -1,0 +1,155 @@
+{
+  "id": "ingredient-summary-flow",
+  "name": "VisionAssist — Ingredient Summary",
+  "description": "Rephrases a product ingredient summary in polished Indonesian. Only rephrases — never adds new allergen claims or alters the structured fields.",
+  "data": {
+    "nodes": [
+      {
+        "id": "prompt_node",
+        "type": "PromptTemplate",
+        "data": {
+          "node": {
+            "template": {
+              "template": {
+                "value": "You are an AI assistant helping a visually impaired user understand a food product label.\n\nThe following structured information has already been extracted from the product:\n- Allergens detected: {allergens}\n- Allergens explicitly absent (negated): {negated_allergens}\n- Expiry date: {expiry_date}\n- Price(s): {prices}\n\nRaw OCR text from the label:\n{ocr_text}\n\nYour task:\nWrite a single, natural Indonesian sentence (≤ 15 words) that summarises the product for a visually impaired listener.\n\nStrict rules:\n1. Use ONLY the information given above — do NOT invent new allergens, claims, or details.\n2. Do NOT include marketing language, opinions, or health advice.\n3. Maximum 15 words.\n4. Write in Indonesian.\n5. If there is no relevant information, respond with: Tidak ada informasi relevan ditemukan.\n\nSummary:",
+                "type": "str",
+                "display_name": "Prompt Template"
+              },
+              "allergens": {
+                "value": "",
+                "type": "str",
+                "display_name": "Allergens",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              },
+              "negated_allergens": {
+                "value": "",
+                "type": "str",
+                "display_name": "Negated Allergens",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              },
+              "expiry_date": {
+                "value": "",
+                "type": "str",
+                "display_name": "Expiry Date",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              },
+              "prices": {
+                "value": "",
+                "type": "str",
+                "display_name": "Prices",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              },
+              "ocr_text": {
+                "value": "",
+                "type": "str",
+                "display_name": "OCR Text",
+                "info": "Injected via tweaks by the FastAPI proxy at runtime"
+              }
+            },
+            "description": "Prompt template that instructs the LLM to rephrase only — no new allergen claims",
+            "display_name": "Ingredient Summary Prompt"
+          }
+        },
+        "position": { "x": 100, "y": 200 }
+      },
+      {
+        "id": "llm_node",
+        "type": "ChatModel",
+        "data": {
+          "node": {
+            "template": {
+              "provider": {
+                "value": "watsonx",
+                "type": "str",
+                "display_name": "Model Provider",
+                "info": "Injected via MODEL_PROVIDER tweak. Values: watsonx | openai | ollama"
+              },
+              "model_name": {
+                "value": "",
+                "type": "str",
+                "display_name": "Model Name/ID",
+                "info": "Injected via WATSONX_MODEL_ID / OPENAI_MODEL_ID / OLLAMA_MODEL_ID tweak"
+              },
+              "api_key": {
+                "value": "",
+                "type": "str",
+                "display_name": "API Key",
+                "password": true,
+                "info": "Injected via WATSONX_API_KEY / OPENAI_API_KEY tweak"
+              },
+              "base_url": {
+                "value": "",
+                "type": "str",
+                "display_name": "Base URL",
+                "info": "Injected via WATSONX_BASE_URL / OLLAMA_BASE_URL tweak"
+              },
+              "project_id": {
+                "value": "",
+                "type": "str",
+                "display_name": "Project ID (watsonx only)",
+                "info": "Injected via WATSONX_PROJECT_ID tweak"
+              },
+              "temperature": {
+                "value": 0.1,
+                "type": "float",
+                "display_name": "Temperature",
+                "info": "Slight temperature for natural phrasing while remaining faithful"
+              }
+            },
+            "description": "Configurable LLM node — provider and credentials injected via tweaks",
+            "display_name": "Configurable LLM"
+          }
+        },
+        "position": { "x": 500, "y": 200 }
+      },
+      {
+        "id": "output_parser",
+        "type": "ChatOutput",
+        "data": {
+          "node": {
+            "template": {},
+            "description": "Passes the LLM text output to the Langflow run response",
+            "display_name": "Output Parser"
+          }
+        },
+        "position": { "x": 900, "y": 200 }
+      }
+    ],
+    "edges": [
+      {
+        "id": "edge_prompt_to_llm",
+        "source": "prompt_node",
+        "target": "llm_node",
+        "sourceHandle": "text",
+        "targetHandle": "input"
+      },
+      {
+        "id": "edge_llm_to_output",
+        "source": "llm_node",
+        "target": "output_parser",
+        "sourceHandle": "text",
+        "targetHandle": "input"
+      }
+    ]
+  },
+  "_metadata": {
+    "prompt_contract": "Rephrase only; ≤15 words; no new allergen claims; Indonesian",
+    "safety_note": "The FastAPI ingredient guard provides a second deterministic layer: rejects summaries exceeding 15 words or containing allergen keywords not present in the input lists.",
+    "tweaks_injected_at_runtime": [
+      "ocr_text",
+      "allergens",
+      "negated_allergens",
+      "expiry_date",
+      "prices",
+      "MODEL_PROVIDER",
+      "WATSONX_API_KEY",
+      "WATSONX_PROJECT_ID",
+      "WATSONX_BASE_URL",
+      "WATSONX_MODEL_ID",
+      "OPENAI_API_KEY",
+      "OPENAI_MODEL_ID",
+      "OLLAMA_BASE_URL",
+      "OLLAMA_MODEL_ID"
+    ]
+  }
+}

@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "develop"]
+    paths:
+      - "visionassist_backend/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "visionassist_backend/**"
+
+defaults:
+  run:
+    working-directory: visionassist_backend
+
+jobs:
+  test:
+    name: Lint · Type-check · Test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      # ────────────────────────────────────────────────────────────────────
+      # Checkout
+      # ────────────────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ────────────────────────────────────────────────────────────────────
+      # Python setup
+      # ────────────────────────────────────────────────────────────────────
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: visionassist_backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ────────────────────────────────────────────────────────────────────
+      # Lint (ruff)
+      # ────────────────────────────────────────────────────────────────────
+      - name: Lint with ruff
+        run: ruff check .
+
+      # ────────────────────────────────────────────────────────────────────
+      # Type-check (mypy)
+      # ────────────────────────────────────────────────────────────────────
+      - name: Type-check with mypy
+        run: mypy app/ --ignore-missing-imports --strict
+        # --ignore-missing-imports handles third-party stubs not installed in CI
+
+      # ────────────────────────────────────────────────────────────────────
+      # Tests (pytest + coverage)
+      # No live Langflow/LLM calls — all external HTTP is mocked.
+      # ────────────────────────────────────────────────────────────────────
+      - name: Run tests with coverage
+        env:
+          # Minimal env vars needed by Settings at import time in tests.
+          PROXY_API_KEY: ci-test-key
+          LANGFLOW_FLOW_ID_QA: aaaaaaaa-0000-0000-0000-000000000001
+          LANGFLOW_FLOW_ID_INGREDIENT: bbbbbbbb-0000-0000-0000-000000000002
+        run: |
+          pytest tests/ \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            -v
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-xml
+          path: visionassist_backend/coverage.xml
