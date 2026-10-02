@@ -4,16 +4,21 @@ on:
   push:
     branches: ["main", "develop"]
     paths:
-      - "visionassist_backend/**"
+      - "app/**"
+      - "tests/**"
+      - "flows/**"
+      - "requirements.txt"
+      - "pyproject.toml"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main"]
     paths:
-      - "visionassist_backend/**"
-
-defaults:
-  run:
-    working-directory: visionassist_backend
+      - "app/**"
+      - "tests/**"
+      - "flows/**"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - ".github/workflows/ci.yml"
 
 jobs:
   test:
@@ -39,7 +44,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
-          cache-dependency-path: visionassist_backend/requirements.txt
+          cache-dependency-path: requirements.txt
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -79,4 +84,4 @@ jobs:
         if: always()
         with:
           name: coverage-xml
-          path: visionassist_backend/coverage.xml
+          path: coverage.xml
