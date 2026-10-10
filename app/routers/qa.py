@@ -3,7 +3,9 @@
 Flow
 ────
 1. Validate/sanitize request (handled by Pydantic model).
-2. Call Langflow visual_qa flow with question + ocr_text as tweaks.
+2. Serialize ocr_text + question as a JSON string and pass it as
+   ``input_value`` to the Langflow visual_qa flow (Chat Input → Prompt
+   Template architecture).
 3. Run the grounding guard on the raw LLM output.
 4. Return the shaped QaAnswerResponse (mirrors Flutter QaAnswer entity).
 
@@ -12,6 +14,7 @@ Safety contract is enforced by the grounding guard, not just prompting.
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Annotated
 
@@ -48,18 +51,18 @@ async def qa_answer(
     """
     client = LangflowClient(settings)
 
-    # Build per-request tweaks: prompt variables injected into the Langflow
-    # flow's prompt template node.
-    extra_tweaks: dict[str, str] = {
-        "ocr_text": body.ocr_text,
-        "question": body.question,
-    }
+    # The flow uses Chat Input → Prompt Template architecture.
+    # All prompt variables are passed as a single JSON string in input_value,
+    # which the Chat Input node forwards as the {payload} variable.
+    input_payload = json.dumps(
+        {"ocr_text": body.ocr_text, "question": body.question},
+        ensure_ascii=False,
+    )
 
     try:
         raw_answer = await client.run_flow(
             flow_id=settings.langflow_flow_id_qa,
-            input_value=body.question,
-            extra_tweaks=extra_tweaks,
+            input_value=input_payload,
         )
     except LangflowUnavailableError as exc:
         logger.error("langflow_unavailable", extra={"endpoint": "qa_answer"})

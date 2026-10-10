@@ -32,6 +32,19 @@ services:
       LANGFLOW_DATABASE_URL: sqlite:////app/langflow/langflow.db
       # Auto-load flows from the mounted directory on startup.
       LANGFLOW_LOAD_FLOWS_PATH: /app/flows
+      # Superuser credentials — required by Langflow ≥ 1.3 (no implicit default).
+      # Override via .env or environment to use a stronger password in production.
+      LANGFLOW_SUPERUSER: ${LANGFLOW_SUPERUSER:-admin}
+      LANGFLOW_SUPERUSER_PASSWORD: ${LANGFLOW_SUPERUSER_PASSWORD:-changeme_langflow}
+      # Allow the internal FastAPI proxy to call Langflow without an API key.
+      # Safe because Langflow is only reachable from within the Docker
+      # "backend" network (port 7860 is NOT exposed to the host by default).
+      # Required since Langflow v1.5: LANGFLOW_AUTO_LOGIN alone is not enough.
+      LANGFLOW_AUTO_LOGIN: "true"
+      LANGFLOW_SKIP_AUTH_AUTO_LOGIN: "true"
+      # Google Generative AI API key — passed directly to the LLM component.
+      # No manual setup in the Langflow UI is needed when this is set.
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
     volumes:
       - langflow_data:/app/langflow
       # Mount the version-controlled flow JSONs so they auto-import on startup.

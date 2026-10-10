@@ -5,10 +5,26 @@ Responsibilities
 1. Build the provider-agnostic ``tweaks`` payload from ``Settings``.
    Credentials never leave this module — they are placed in ``tweaks`` and
    sent only to the Langflow service on the internal Docker network.
+   Exception: ``google`` provider — ``GOOGLE_API_KEY`` is injected into the
+   Langflow container via environment variable (``docker-compose.yml``), so
+   only the model ID is forwarded as a tweak.
 2. Execute the Langflow run request with a configurable timeout + one retry.
 3. Map HTTP / connection errors to ``LangflowUnavailableError`` so the router
    can return ``503`` without knowing transport details.
 4. Extract the raw text output from Langflow's response envelope.
+
+Flow input convention
+─────────────────────
+Both flows use a Chat Input to Prompt Template architecture.
+All prompt variables are packed into a single JSON string in ``input_value``
+and the Chat Input node exposes it as the ``{payload}`` template variable:
+
+  visual_qa:
+    input_value = '{"ocr_text": "...", "question": "..."}'
+
+  ingredient_summary:
+    input_value = '{"allergens": "...", "negated_allergens": "...",
+                   "expiry_date": "...", "prices": "...", "ocr_text": "..."}'
 """
 
 from __future__ import annotations
@@ -43,8 +59,8 @@ def _build_provider_tweaks(settings: Settings) -> dict[str, Any]:
     are needed to switch providers.  Only the credentials for the selected
     provider are included — unused keys are omitted to keep the payload lean.
 
-    For ``google``: the API key is stored as a Langflow Global Variable
-    (``GOOGLE_API_KEY``) and read directly by the Langflow LLM node.
+    For ``google``: the API key is injected into the Langflow container as
+    the ``GOOGLE_API_KEY`` environment variable (see ``docker-compose.yml``).
     No credential is forwarded from this backend — only the model ID is sent.
     """
     base: dict[str, Any] = {"MODEL_PROVIDER": settings.model_provider}
@@ -158,10 +174,14 @@ class LangflowClient:
             ``LANGFLOW_FLOW_ID_INGREDIENT``).
         input_value:
             Primary text input passed as ``input_value`` in the request body.
-            For Q&A this is the question; for ingredients it is the OCR text.
+            For both flows this is a JSON string containing all prompt
+            variables (e.g. ``{"ocr_text": "...", "question": "..."}``),
+            which the Chat Input node forwards as the ``{payload}`` variable
+            to the Prompt Template.
         extra_tweaks:
-            Per-request tweaks (e.g. prompt variables like ``ocr_text``,
-            ``question``).  Merged on top of the provider tweaks.
+            Optional per-request tweaks merged on top of the provider tweaks.
+            No longer used for prompt variables (handled via ``input_value``);
+            kept for forward-compatibility.
 
         Returns
         -------

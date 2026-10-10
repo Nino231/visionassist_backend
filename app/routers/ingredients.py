@@ -3,7 +3,9 @@
 Flow
 ────
 1. Validate/sanitize request (Pydantic).
-2. Call Langflow ingredient_summary flow with structured fields + ocr_text.
+2. Serialize the structured fields as a JSON string and pass it as
+   ``input_value`` to the Langflow ingredient_summary flow (Chat Input →
+   Prompt Template architecture).
 3. Run the ingredient guard on the rephrased summary.
 4. If the guard rejects the summary, fall back to a locally-composed summary
    built from the input fields (never fail the whole request for this).
@@ -16,6 +18,7 @@ of truth for structured fields.
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Annotated
 
@@ -59,27 +62,31 @@ async def ingredients_summarize(
     """
     client = LangflowClient(settings)
 
-    # Build human-readable field list for the prompt.
+    # The flow uses Chat Input → Prompt Template architecture.
+    # All prompt variables are packed into a single JSON string in input_value,
+    # which the Chat Input node forwards as the {payload} variable.
     allergen_str = ", ".join(body.allergens) if body.allergens else "tidak ada"
     negated_str = ", ".join(body.negated_allergens) if body.negated_allergens else "tidak ada"
     expiry_str = body.expiry_date or "tidak ditemukan"
     prices_str = ", ".join(body.prices) if body.prices else "tidak ditemukan"
 
-    extra_tweaks: dict[str, str] = {
-        "ocr_text": body.ocr_text,
-        "allergens": allergen_str,
-        "negated_allergens": negated_str,
-        "expiry_date": expiry_str,
-        "prices": prices_str,
-    }
+    input_payload = json.dumps(
+        {
+            "allergens": allergen_str,
+            "negated_allergens": negated_str,
+            "expiry_date": expiry_str,
+            "prices": prices_str,
+            "ocr_text": body.ocr_text,
+        },
+        ensure_ascii=False,
+    )
 
     llm_summary: str | None = None
 
     try:
         llm_summary = await client.run_flow(
             flow_id=settings.langflow_flow_id_ingredient,
-            input_value=body.ocr_text,
-            extra_tweaks=extra_tweaks,
+            input_value=input_payload,
         )
     except LangflowUnavailableError:
         logger.error("langflow_unavailable", extra={"endpoint": "ingredients_summarize"})
