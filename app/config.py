@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
     # LLM provider
     # ------------------------------------------------------------------ #
-    model_provider: Literal["watsonx", "openai", "ollama"] = Field(
-        "watsonx",
+    model_provider: Literal["watsonx", "openai", "ollama", "google"] = Field(
+        "google",
         description="Which LLM backend to use. Injected as a Langflow tweak.",
     )
 
@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     # Ollama
     ollama_base_url: str = Field("http://host.docker.internal:11434", description="Ollama base URL")
     ollama_model_id: str = Field("llama3", description="Ollama model name")
+
+    # Google Generative AI
+    # API key is stored as a Langflow Global Variable (GOOGLE_API_KEY) and
+    # read directly by the LLM node — it is NOT forwarded from this backend.
+    google_model_id: str = Field("gemini-2.0-flash", description="Google Generative AI model name")
 
     # ------------------------------------------------------------------ #
     # Safety / grounding

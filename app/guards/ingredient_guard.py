@@ -14,15 +14,18 @@ Safety contract
 When a guard fires the caller should fall back to a locally-composed summary
 built from the input fields — never fail the whole request.
 
-Allergen keyword map (ported from Phase 1 AllergenChecker):
-  'Kacang'  → ['kacang', 'peanut', 'nuts', 'almond', 'cashew']
-  'Gluten'  → ['gandum', 'terigu', 'gluten', 'wheat']
-  'Susu'    → ['susu', 'milk', 'laktosa', 'lactose', 'dairy', 'whey', 'casein']
-  'Telur'   → ['telur', 'egg']
-  'Kerang'  → ['udang', 'kepiting', 'shellfish', 'shrimp', 'crab', 'lobster']
-  'Ikan'    → ['ikan', 'fish', 'anchovy', 'salmon', 'tuna']
-  'Kedelai' → ['kedelai', 'soy', 'soya', 'tofu']
-  'Wijen'   → ['wijen', 'sesame', 'tahini']
+Allergen keyword map (synced with Flutter AllergenChecker):
+  'Kacang tanah' → peanut / groundnut / arachis / mentega kacang / peanut butter
+  'Kacang pohon' → almond / mete / cashew / hazelnut / walnut / pecan / ... / tree nut
+  'Gluten'       → gluten / gandum / terigu / wheat / rye / barley / oat / spelt / malt
+  'Susu'         → susu / milk / laktosa / lactose / dairy / whey / casein / keju / mentega / krim / yogurt
+  'Telur'        → telur / egg / albumin / ovalbumin / lisozim / mayones / mayonnaise
+  'Krustasea'    → udang / kepiting / rajungan / lobster / shrimp / crab / prawn / ebi / terasi / petis udang
+  'Moluska'      → kerang / tiram / cumi / sotong / gurita / clam / oyster / squid / octopus / mussel
+  'Ikan'         → ikan / fish / anchovy / teri / salmon / tuna / tongkol / surimi / kecap ikan / fish sauce
+  'Kedelai'      → kedelai / soy / soya / soybean / tofu / tahu / tempe / kecap / miso / edamame / soy lecithin
+  'Wijen'        → wijen / sesame / tahini / minyak wijen / sesame oil / sesame extract
+  'Sulfit'       → sulfit / sulfite / sulphite / sulfur dioksida / sulfur dioxide / so2 / metabisulfit / ins 220-228
 """
 
 from __future__ import annotations
@@ -31,16 +34,58 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Allergen keyword map — ported exactly from Phase 1 AllergenChecker.
+# Allergen keyword map — synced with Flutter AllergenChecker._keywords.
 _ALLERGEN_KEYWORDS: dict[str, list[str]] = {
-    "Kacang": ["kacang", "peanut", "nuts", "almond", "cashew"],
-    "Gluten": ["gandum", "terigu", "gluten", "wheat"],
-    "Susu": ["susu", "milk", "laktosa", "lactose", "dairy", "whey", "casein"],
-    "Telur": ["telur", "egg"],
-    "Kerang": ["udang", "kepiting", "shellfish", "shrimp", "crab", "lobster"],
-    "Ikan": ["ikan", "fish", "anchovy", "salmon", "tuna"],
-    "Kedelai": ["kedelai", "soy", "soya", "tofu"],
-    "Wijen": ["wijen", "sesame", "tahini"],
+    "Kacang tanah": [
+        "kacang tanah", "peanut", "groundnut", "arachis",
+        "mentega kacang", "peanut butter",
+    ],
+    "Kacang pohon": [
+        "almond", "kacang mete", "kacang mede", "mete", "cashew",
+        "hazelnut", "filbert", "kenari", "walnut", "pecan",
+        "brazil nut", "pistachio", "pistasio", "macadamia",
+        "queensland nut", "chestnut", "pine nut", "tree nut", "kacang pohon",
+    ],
+    "Gluten": [
+        "gluten", "gandum", "terigu", "wheat", "rye", "gandum hitam",
+        "barley", "jelai", "oat", "oats", "havermut", "spelt", "malt",
+    ],
+    "Susu": [
+        "susu", "milk", "laktosa", "lactose", "dairy", "whey", "casein",
+        "kasein", "keju", "cheese", "mentega", "butter", "krim", "cream",
+        "yogurt", "yoghurt",
+    ],
+    "Telur": [
+        "telur", "egg", "albumin", "ovalbumin", "lisozim",
+        "mayones", "mayonnaise",
+    ],
+    "Krustasea": [
+        "udang", "kepiting", "rajungan", "lobster", "shrimp", "crab",
+        "prawn", "crustacean", "krustasea", "ebi", "terasi", "petis udang",
+    ],
+    "Moluska": [
+        "kerang", "tiram", "cumi", "sotong", "gurita", "remis", "bekicot",
+        "siput", "clam", "oyster", "squid", "octopus", "mussel",
+        "mollusc", "mollusk", "moluska",
+    ],
+    "Ikan": [
+        "ikan", "fish", "anchovy", "teri", "salmon", "tuna", "tongkol",
+        "surimi", "kecap ikan", "fish sauce",
+    ],
+    "Kedelai": [
+        "kedelai", "soy", "soya", "soybean", "tofu", "tahu", "tempe",
+        "tempeh", "kecap", "miso", "edamame", "lesitin kedelai", "soy lecithin",
+    ],
+    "Wijen": [
+        "wijen", "sesame", "tahini", "minyak wijen",
+        "sesame oil", "sesame extract",
+    ],
+    "Sulfit": [
+        "sulfit", "sulfite", "sulphite", "sulfur dioksida", "sulfur dioxide",
+        "so2", "metabisulfit", "metabisulfite", "bisulfit",
+        "ins 220", "ins 221", "ins 222", "ins 223", "ins 224",
+        "ins 225", "ins 226", "ins 227", "ins 228",
+    ],
 }
 
 MAX_SUMMARY_WORDS = 15

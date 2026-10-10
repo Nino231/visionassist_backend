@@ -42,6 +42,10 @@ def _build_provider_tweaks(settings: Settings) -> dict[str, Any]:
     The flow's LLM node reads these tweaks at runtime so no flow-graph edits
     are needed to switch providers.  Only the credentials for the selected
     provider are included — unused keys are omitted to keep the payload lean.
+
+    For ``google``: the API key is stored as a Langflow Global Variable
+    (``GOOGLE_API_KEY``) and read directly by the Langflow LLM node.
+    No credential is forwarded from this backend — only the model ID is sent.
     """
     base: dict[str, Any] = {"MODEL_PROVIDER": settings.model_provider}
 
@@ -68,6 +72,10 @@ def _build_provider_tweaks(settings: Settings) -> dict[str, Any]:
                 "OLLAMA_MODEL_ID": settings.ollama_model_id,
             }
         )
+    elif settings.model_provider == "google":
+        # GOOGLE_API_KEY is a Langflow Global Variable set in the Langflow UI.
+        # The backend only informs the flow which model to use.
+        base.update({"GOOGLE_MODEL_ID": settings.google_model_id})
 
     return base
 

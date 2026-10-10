@@ -24,8 +24,8 @@ from app.guards.ingredient_guard import (
 def test_valid_summary_passes() -> None:
     """Summary ≤ 15 words and no new allergens — should pass."""
     ok, reason = check_ingredient_summary(
-        summary="Mengandung kacang, bebas gluten, kedaluwarsa Des 2026.",
-        allergens=["Kacang"],
+        summary="Mengandung kacang tanah, bebas gluten, kedaluwarsa Des 2026.",
+        allergens=["Kacang tanah"],
         negated_allergens=["Gluten"],
     )
     assert ok is True
@@ -43,7 +43,7 @@ def test_summary_too_long_rejected() -> None:
 
     ok, reason = check_ingredient_summary(
         summary=long_summary,
-        allergens=["Kacang"],
+        allergens=["Kacang tanah"],
         negated_allergens=[],
     )
     assert ok is False
@@ -53,8 +53,8 @@ def test_summary_too_long_rejected() -> None:
 def test_allergen_leak_rejected() -> None:
     """LLM introduces 'susu' allergen not present in input lists — must be rejected."""
     ok, reason = check_ingredient_summary(
-        summary="Mengandung kacang dan susu.",
-        allergens=["Kacang"],          # Kacang is known
+        summary="Mengandung kacang tanah dan susu.",
+        allergens=["Kacang tanah"],    # Kacang tanah is known
         negated_allergens=[],          # Susu is NOT in any input list
     )
     assert ok is False
@@ -64,8 +64,8 @@ def test_allergen_leak_rejected() -> None:
 def test_known_allergen_in_summary_passes() -> None:
     """Summary mentions an allergen already present in the allergens list — OK."""
     ok, reason = check_ingredient_summary(
-        summary="Mengandung kacang dan telur.",
-        allergens=["Kacang", "Telur"],
+        summary="Mengandung kacang tanah dan telur.",
+        allergens=["Kacang tanah", "Telur"],
         negated_allergens=[],
     )
     assert ok is True
@@ -95,7 +95,67 @@ def test_keyword_form_allergen_leak() -> None:
     """LLM uses keyword 'milk' (canonical: Susu) not in input lists — leak."""
     ok, reason = check_ingredient_summary(
         summary="Contains milk and peanut.",
-        allergens=["Kacang"],          # peanut/Kacang is known; milk/Susu is not
+        allergens=["Kacang tanah"],    # peanut/Kacang tanah is known; milk/Susu is not
+        negated_allergens=[],
+    )
+    assert ok is False
+    assert reason == "ALLERGEN_LEAK"
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# New allergen map cases
+# ────────────────────────────────────────────────────────────────────────────
+
+
+def test_donuts_is_not_kacang() -> None:
+    """'donuts' must not trigger any nut allergen — no substring match on 'nut'."""
+    ok, reason = check_ingredient_summary(
+        summary="Produk ini adalah donuts cokelat.",
+        allergens=[],
+        negated_allergens=[],
+    )
+    assert ok is True
+    assert reason == "OK"
+
+
+def test_santan_is_not_susu() -> None:
+    """'santan' (coconut milk) must not trigger Susu allergen."""
+    ok, reason = check_ingredient_summary(
+        summary="Mengandung santan kelapa.",
+        allergens=[],
+        negated_allergens=[],
+    )
+    assert ok is True
+    assert reason == "OK"
+
+
+def test_terong_is_not_telur() -> None:
+    """'terong' (eggplant) must not trigger Telur allergen."""
+    ok, reason = check_ingredient_summary(
+        summary="Dibuat dari terong ungu.",
+        allergens=[],
+        negated_allergens=[],
+    )
+    assert ok is True
+    assert reason == "OK"
+
+
+def test_kenari_is_kacang_pohon() -> None:
+    """'kenari' (canarium nut) must be detected as Kacang pohon."""
+    ok, reason = check_ingredient_summary(
+        summary="Mengandung kenari.",
+        allergens=["Kacang pohon"],
+        negated_allergens=[],
+    )
+    assert ok is True
+    assert reason == "OK"
+
+
+def test_kenari_leaks_when_not_declared() -> None:
+    """'kenari' in summary without Kacang pohon in input lists — must be rejected."""
+    ok, reason = check_ingredient_summary(
+        summary="Mengandung kenari.",
+        allergens=[],
         negated_allergens=[],
     )
     assert ok is False
@@ -109,7 +169,7 @@ def test_keyword_form_allergen_leak() -> None:
 
 def test_fallback_summary_word_count() -> None:
     summary = build_fallback_summary(
-        allergens=["Kacang", "Telur"],
+        allergens=["Kacang tanah", "Telur"],
         negated_allergens=["Gluten"],
         expiry_date="12/2026",
         prices=["Rp 15.000"],
@@ -130,12 +190,12 @@ def test_fallback_summary_empty_inputs() -> None:
 
 def test_fallback_summary_contains_allergen() -> None:
     summary = build_fallback_summary(
-        allergens=["Kacang"],
+        allergens=["Kacang tanah"],
         negated_allergens=[],
         expiry_date=None,
         prices=[],
     )
-    assert "kacang" in summary.lower()
+    assert "kacang tanah" in summary.lower()
 
 
 def test_fallback_summary_expiry_present() -> None:

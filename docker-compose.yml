@@ -41,8 +41,8 @@ services:
     # ── Uncomment the lines below to temporarily expose the Langflow UI
     #    on the host for local flow editing (see flows/README.md).
     #    Re-comment before committing / deploying.
-    # ports:
-    #   - "7860:7860"
+    ports:
+      - "7860:7860"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
       interval: 30s
