@@ -1,5 +1,5 @@
-﻿{
-    "name":  "VisionAssist â Visual Q\u0026A",
+{
+    "name":  "VisionAssist - Visual Q\u0026A",
     "description":  "Answers a question grounded ONLY in OCR text from a product label image; returns NOT_FOUND if the answer is not explicit. Input: one JSON string with keys ocr_text and question. Output: short answer in the question language, or NOT_FOUND.",
     "icon":  null,
     "icon_bg_color":  null,
