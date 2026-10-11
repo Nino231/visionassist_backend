@@ -3,7 +3,7 @@
 ![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![CI](https://github.com/your-org/visionassist_backend/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/Nino231/visionassist_backend/actions/workflows/ci.yml/badge.svg)
 
 ---
 
