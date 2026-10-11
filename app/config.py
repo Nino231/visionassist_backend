@@ -67,11 +67,14 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------ #
     # Safety / grounding
     # ------------------------------------------------------------------ #
-    grounding_min_overlap: float = Field(
-        0.3,
+    grounding_min_coverage: float = Field(
+        0.7,
         ge=0.0,
         le=1.0,
-        description="Jaccard overlap threshold below which a Q&A answer is rejected",
+        description=(
+            "Minimum share of the answer's content words that must appear in the "
+            "OCR text; below this a Q&A answer is rejected"
+        ),
     )
 
     # ------------------------------------------------------------------ #

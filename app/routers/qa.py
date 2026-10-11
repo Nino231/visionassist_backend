@@ -76,7 +76,7 @@ async def qa_answer(
         llm_answer=raw_answer,
         question=body.question,
         ocr_text=body.ocr_text,
-        min_overlap=settings.grounding_min_overlap,
+        min_coverage=settings.grounding_min_coverage,
     )
 
     return QaAnswerResponse(

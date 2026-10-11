@@ -109,8 +109,9 @@ Two independent safety layers guard every response:
    answer is absent.
 2. **Code-level (deterministic)** — FastAPI runs the grounding guard *after*
    every Langflow call, before the response leaves the proxy:
-   - Jaccard token overlap between the LLM answer and `ocr_text` must be ≥
-     `GROUNDING_MIN_OVERLAP` (default 0.3).
+   - Coverage: the share of the answer's content words that appear in `ocr_text`
+     must be ≥ `GROUNDING_MIN_COVERAGE` (default 0.7). Any number in the answer
+     (date, price, dose) must also appear in `ocr_text`.
    - Any dosage/quantity number (e.g. "3 tablet", "500mg") must appear
      verbatim in `ocr_text` — hallucinated numbers always trigger the safe
      fallback regardless of overlap score.
