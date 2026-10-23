@@ -11,7 +11,7 @@
 #   - GOOGLE_API_KEY set in Langflow UI (Settings -> Global Variables)
 # =============================================================================
 
-$BASE = "http://localhost:8000"
+$BASE = "http://localhost:8001"
 $KEY  = (Get-Content .\.env | Where-Object { $_ -match "^PROXY_API_KEY=" }) -replace "^PROXY_API_KEY=", ""
 $H    = @{ "X-API-Key" = $KEY; "Content-Type" = "application/json" }
 $PASS = 0

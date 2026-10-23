@@ -1,11 +1,11 @@
 {
   "info": {
     "name": "VisionAssist Backend — API Test Suite",
-    "description": "Full test suite for the VisionAssist proxy API.\n\nSetup:\n1. Set the collection variable `base_url` (default: http://localhost:8000)\n2. Set the collection variable `api_key` to the value of PROXY_API_KEY in your .env\n\nEndpoints covered:\n  GET  /v1/health\n  POST /v1/qa/answer\n  POST /v1/ingredients/summarize",
+    "description": "Full test suite for the VisionAssist proxy API.\n\nSetup:\n1. Set the collection variable `base_url` (default: http://localhost:8001)\n2. Set the collection variable `api_key` to the value of PROXY_API_KEY in your .env\n\nEndpoints covered:\n  GET  /v1/health\n  POST /v1/qa/answer\n  POST /v1/ingredients/summarize",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "base_url", "value": "http://localhost:8001", "type": "string" },
     { "key": "api_key",  "value": "YOUR_PROXY_API_KEY_HERE", "type": "string" }
   ],
   "item": [

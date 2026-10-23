@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-BASE="http://localhost:8000"
+BASE="http://localhost:8001"
 KEY=$(grep -m1 '^PROXY_API_KEY=' .env | cut -d'=' -f2)
 PASS=0; FAIL=0
 

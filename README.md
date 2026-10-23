@@ -80,16 +80,16 @@ LANGFLOW_FLOW_ID_INGREDIENT=<"id" in flows/ingredient_summary.json>
 
 ```bash
 docker compose up --build                 # first start takes a few minutes
-curl http://localhost:8000/v1/health      # → {"status":"ok","langflow":"reachable"}
+curl http://localhost:8001/v1/health      # → {"status":"ok","langflow":"reachable"}
 ```
 Langflow UI (to inspect the flows): http://localhost:7860.
 
 **2. Make the backend reachable from the phone**
 
 ```bash
-ngrok http 8000        # copy the https://<id>.ngrok-free.app URL
+ngrok http 8001        # copy the https://<id>.ngrok-free.app URL
 ```
-(Android emulator: skip this and use `http://10.0.2.2:8000` — see *Configuration*.)
+(Android emulator: skip this and use `http://10.0.2.2:8001` — see *Configuration*.)
 
 **3. App**
 
@@ -141,7 +141,7 @@ re-run `flutter run` (hot reload is not enough).
 
 ```mermaid
 flowchart LR
-    APP[Flutter App\nENABLE_REMOTE_QA] -->|HTTPS + X-API-Key| API[FastAPI Proxy\n:8000]
+    APP[Flutter App\nENABLE_REMOTE_QA] -->|HTTPS + X-API-Key| API[FastAPI Proxy\n:8001]
     API -->|input_value = JSON payload| LF[Langflow\n:7860]
     subgraph Flow["Flow (flows/*.json)"]
         direction LR
@@ -151,7 +151,7 @@ flowchart LR
     API -->|post-validate\ncoverage · numbers · length| APP
 ```
 
-- The Flutter app only ever contacts `api` (port 8000).
+- The Flutter app only ever contacts `api` (port 8001).
 - Both flows are **Chat Input → Prompt Template → Google Generative AI → Chat Output**. The proxy packs all prompt
   variables into **one JSON string** and sends it as the chat `input_value`; it fills the template's single `{payload}`
   variable. (No per-field tweaks.)
@@ -173,7 +173,7 @@ All endpoints (except `/v1/health`) require header `X-API-Key: <PROXY_API_KEY>`.
 | `/v1/qa/answer` | POST | `{question, ocr_text}` | `{answer, is_grounded, source_sentence}` | 401, 422, 429, 503 |
 | `/v1/ingredients/summarize` | POST | `{ocr_text, allergens, negated_allergens, expiry_date, prices}` | `{summary}` | 401, 422, 429 |
 
-Limits: `question` 1–2000 chars, `ocr_text` 1–2000 chars. Interactive docs at `http://localhost:8000/docs`.
+Limits: `question` 1–2000 chars, `ocr_text` 1–2000 chars. Interactive docs at `http://localhost:8001/docs`.
 
 ### `POST /v1/qa/answer`
 
@@ -312,7 +312,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-API: `http://localhost:8000` · Langflow UI: `http://localhost:7860` (auto-login in development).
+API: `http://localhost:8001` · Langflow UI: `http://localhost:7860` (auto-login in development).
 
 ### 3. Flows
 
@@ -331,10 +331,10 @@ versioned together — change a flow, export, commit the JSON in the same PR.
 ### 5. Smoke test
 
 ```bash
-curl http://localhost:8000/v1/health
+curl http://localhost:8001/v1/health
 # {"status":"ok","langflow":"reachable"}
 
-curl -X POST http://localhost:8000/v1/qa/answer \
+curl -X POST http://localhost:8001/v1/qa/answer \
   -H "X-API-Key: <PROXY_API_KEY>" -H "Content-Type: application/json" \
   -d '{"question":"Berapa kali minum?","ocr_text":"Diminum 3 kali sehari setelah makan."}'
 ```
@@ -353,8 +353,8 @@ PROXY_API_KEY=<same value as this backend's PROXY_API_KEY>
 
 | App runs on | `API_PROXY_URL` |
 |-------------|-----------------|
-| Android emulator | `http://10.0.2.2:8000` (needs cleartext traffic) |
-| Real phone | an HTTPS tunnel (e.g. ngrok) — `localhost` is never reachable from a phone; plain `http://<pc-ip>:8000` needs cleartext traffic and a firewall rule for port 8000 |
+| Android emulator | `http://10.0.2.2:8001` (needs cleartext traffic) |
+| Real phone | an HTTPS tunnel (e.g. ngrok) — `localhost` is never reachable from a phone; plain `http://<pc-ip>:8001` needs cleartext traffic and a firewall rule for port 8001 |
 
 All three values must be set for the remote path to activate; the app falls back on-device on any error or after
 `REMOTE_TIMEOUT_SECONDS` (default 20).

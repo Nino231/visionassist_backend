@@ -8,7 +8,7 @@
 # Quick start:
 #   1. Copy .env.example to .env and fill in your credentials.
 #   2. docker compose up --build
-#   3. The API is available at http://localhost:8000
+#   3. The API is available at http://localhost:8001
 #
 # To edit flows in the Langflow UI:
 #   Uncomment the `ports` line under the `langflow` service, restart
@@ -75,7 +75,7 @@ services:
       # Override the default Langflow URL to use the internal service name.
       LANGFLOW_BASE_URL: http://langflow:7860
     ports:
-      - "${API_HOST_PORT:-8000}:8000"
+      - "${API_HOST_PORT:-8001}:8001"
     depends_on:
       langflow:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
           "CMD",
           "python",
           "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/v1/health')",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/v1/health')",
         ]
       interval: 30s
       timeout: 10s
