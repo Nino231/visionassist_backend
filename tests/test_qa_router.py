@@ -26,9 +26,12 @@ os.environ.setdefault("PROXY_API_KEY", "test-key-abc123")
 os.environ.setdefault("LANGFLOW_FLOW_ID_QA", "aaaaaaaa-0000-0000-0000-000000000001")
 os.environ.setdefault("LANGFLOW_FLOW_ID_INGREDIENT", "bbbbbbbb-0000-0000-0000-000000000002")
 
+from app.config import settings  # noqa: E402 (must come after env vars)
 from app.main import app  # noqa: E402 (must come after env vars)
 
-VALID_HEADERS = {"X-API-Key": "test-key-abc123"}
+# Use the key the app actually loaded: CI sets PROXY_API_KEY itself, in which
+# case setdefault() above does not apply.
+VALID_HEADERS = {"X-API-Key": settings.proxy_api_key}
 
 OCR_MEDICINE = (
     "Paracetamol 500mg. Diminum 3 kali sehari setelah makan. "
